@@ -17,27 +17,27 @@ interface UserData {
 const Home = () => {
   const ColorStore = useSelector(state => state);
   const [FlatData, setFlatData] = useState<UserData[]>([]);
+  const [page, setPage] = useState<number>(0);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(setColor());
     dispatch(setStaticColor('Red'));
-
-    const FunData = async () => {
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/users',
-        {
-          method: 'GET',
-        },
-      );
-      const Data = await response.json();
-      if (Data.length > 0) {
-        setFlatData(Data);
-      }
-    };
-
-    FunData();
   }, []);
+  useEffect(() => {
+    FunData();
+  }, [page]);
+  const FunData = async () => {
+    const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+      method: 'GET',
+    });
+    const Data = await response.json();
+    if (Data.length > 0 && page == 0) {
+      setFlatData(Data);
+    } else if (page > 0) {
+      setFlatData(FlatData.concat(Data));
+    }
+  };
   useEffect(() => {
     console.log('ColorStore', ColorStore?.color?.value);
   }, [ColorStore]);
@@ -49,10 +49,23 @@ const Home = () => {
         data={FlatData}
         renderItem={({item, index}) => {
           return (
-            <View>
-              <Text>{item.id}</Text>
+            <View
+              style={{
+                height: 250,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={{fontSize: 44}}>
+                {item.name}
+                {FlatData.length}
+              </Text>
             </View>
           );
+        }}
+        onEndReachedThreshold={0.1}
+        keyExtractor={(item, index) => index.toString()}
+        onEndReached={() => {
+          setPage(page + 1);
         }}
       />
     </View>
